@@ -23,4 +23,25 @@ else
   echo "Deploying snapshot..."
   ./gradlew uploadArchives -PSONATYPE_NEXUS_USERNAME="${SONATYPE_NEXUS_USERNAME}" -PSONATYPE_NEXUS_PASSWORD="${SONATYPE_NEXUS_PASSWORD}" -x apollo-integration:uploadArchives -x apollo-sample:uploadArchives
   echo "Snapshot deployed!"
+  
+  echo "Publishing javadoc..."
+
+  cp -R apollo-api/build/docs/javadoc $HOME/javadoc-latest/
+  cp -R apollo-gradle-plugin/build/docs/javadoc $HOME/javadoc-latest/
+  cp -R apollo-http-cache/build/docs/javadoc $HOME/javadoc-latest/
+  cp -R apollo-runtime/build/docs/javadoc $HOME/javadoc-latest/
+
+  cd $HOME
+  git config --global user.email "travis@travis-ci.org"
+  git config --global user.name "travis-ci"
+  git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/apollographql/apollo-android gh-pages > /dev/null
+
+  cd gh-pages
+  git rm -rf ./javadoc
+  cp -Rf $HOME/javadoc-latest ./javadoc
+  git add -f .
+  git commit -m "Latest javadoc on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages"
+  git push -fq origin gh-pages > /dev/null
+
+  echo "Published Javadoc to gh-pages!"
 fi
